@@ -1,0 +1,140 @@
+package com.rupini.unitywrapper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.unity3d.player.UnityPlayerActivity;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.VKUIHelper;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKBatchRequest;
+import com.vk.sdk.api.VKBatchRequest.VKBatchRequestListener;
+import com.vk.sdk.api.VKError;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.model.VKApiUserFull;
+import com.vk.sdk.api.model.VKList;
+import com.vk.sdk.api.model.VKUsersArray;
+
+import android.content.Intent;
+import android.os.Bundle;
+
+public class MainActivity extends UnityPlayerActivity {
+
+	public final UnityService service = new UnityService();
+	private final VKListener listener = new VKListener();
+	private final String appId = "4985502";
+	private final List<User> users = new ArrayList<User>();
+
+	private VKBatchRequest batchRequest = null;
+	private boolean requestComplited;
+	
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		VKSdk.initialize(listener, appId);
+
+		VKUIHelper.onCreate(this);
+
+		if (!VKSdk.wakeUpSession()) {
+			VKSdk.authorize(VKScope.FRIENDS, VKScope.WALL);
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+		VKUIHelper.onResume(this);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		VKUIHelper.onActivityResult(this, requestCode, resultCode, data);
+	}
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		VKUIHelper.onDestroy(this);
+		if (batchRequest != null) {
+			batchRequest.cancel();
+		}
+	}
+
+	private void onFriendsReceived(VKResponse response) {
+		VKUsersArray usersArray = (VKUsersArray) response.parsedModel;
+
+		for (VKApiUserFull userFull : usersArray) {
+			User user = new User();
+			user.id = userFull.getId();
+			user.fullName = userFull.first_name + " " + userFull.last_name;
+			user.profilePhotoUrl = "";
+			users.add(user);
+		}
+	}
+
+	private void onOwnerReceived(VKResponse response) {
+		VKApiUserFull owner = (VKApiUserFull) ((VKList) response.parsedModel).get(0);
+
+		User user = new User();
+		user.id = owner.getId();
+		user.fullName = owner.first_name + " " + owner.last_name;
+		
+		user.profilePhotoUrl = "";
+		users.add(user);
+	}
+
+	public void requestUserList(String requestParams) {
+
+		VKRequest request1 = VKApi.users().get(VKParameters.from(VKApiConst.USER_IDS, VKSdk.getAccessToken().userId));
+		VKRequest request2 = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, requestParams));
+		batchRequest = new VKBatchRequest(request1, request2);
+		batchRequest.executeWithListener(new VKBatchRequestListener() {
+			@Override
+			public void onComplete(VKResponse[] responses) {
+				super.onComplete(responses);
+				users.clear();
+				onOwnerReceived(responses[0]);
+				onFriendsReceived(responses[1]);
+			}
+		});
+	}
+
+	public boolean isRequestComplited() {
+		return requestComplited;
+	}
+
+	public List<User> getUserList() {
+		if (requestComplited)
+			return users;
+		else
+			return new ArrayList<User>();
+	}
+
+	public String getToken() {
+		return VKSdk.getAccessToken().toString().split("@")[1];
+	}
+
+	public String getVKAppId() {
+		return appId;
+	}
+
+	public void share(String message, int userId) {
+		VKRequest wallPost = VKApi.wall()
+				.post(VKParameters.from(VKApiConst.OWNER_ID, userId, VKApiConst.MESSAGE, message));
+		wallPost.executeWithListener(new VKRequest.VKRequestListener() {
+			@Override
+			public void onError(VKError error) {
+			}
+
+			@Override
+			public void onComplete(VKResponse response) {
+			}
+		});
+	}
+}

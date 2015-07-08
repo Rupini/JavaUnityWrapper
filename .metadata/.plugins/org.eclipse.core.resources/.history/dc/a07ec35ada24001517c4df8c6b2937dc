@@ -1,0 +1,7 @@
+package com.rupini.unitywrapper;
+
+import com.vk.sdk.VKSdkListener;
+
+public class VKListener extends VKSdkListener {
+
+}

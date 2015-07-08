@@ -1,0 +1,52 @@
+package com.rupini.unitywrapper;
+
+import com.unity3d.player.UnityPlayerActivity;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.VKUIHelper;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+
+import android.os.Bundle;
+
+public class MainActivity extends UnityPlayerActivity {
+
+	public final UnityService service = new UnityService();
+	private final VKListener listener = new VKListener();
+	private final String appId = "4985502";
+	private VKRequest currentRequest = null;
+
+	private final VKRequest.VKRequestListener requestListener = new VKRequest.VKRequestListener() {
+		@Override
+        public void onComplete(VKResponse response) {
+            super.onComplete(response);
+            onFriendListReceived(response);
+		}
+	};
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		VKSdk.initialize(listener, appId);
+
+		VKUIHelper.onCreate(this);
+
+		if (!VKSdk.wakeUpSession()) {
+			VKSdk.authorize(VKScope.FRIENDS, VKScope.WALL);
+		}
+	}
+
+	public void requesFriendList() {
+		currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "id,first_name,last_name"));
+		currentRequest.executeWithListener(requestListener);
+	}
+
+	private void onFriendListReceived(VKResponse response) {
+		 VKUsersArray usersArray = (VKUsersArray) response.parsedModel;
+	}
+
+}

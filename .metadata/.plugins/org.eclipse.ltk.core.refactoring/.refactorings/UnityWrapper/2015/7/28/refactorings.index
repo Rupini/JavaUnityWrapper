@@ -1,0 +1,11 @@
+1436301107511	Rename field 'requestListener'
+1436301115094	Rename field 'reqtListener'
+1436313754151	Rename method 'requesFriendList'
+1436313857599	Rename field 'requesttListener'
+1436315860704	Rename field 'currentRequest'
+1436315885784	Rename field 'requestComplited'
+1436319881362	Rename local variable 'ownerRequest'
+1436323526322	Rename method 'onUserListReceived'
+1436343909244	Rename field 'friendsRequestComplited'
+1436355227287	Delete element
+1436355320698	Delete element

@@ -1,0 +1,29 @@
+package com.rupini.unitywrapper;
+
+import com.unity3d.player.UnityPlayerActivity;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.VKUIHelper;
+
+import android.os.Bundle;
+
+public class MainActivity extends UnityPlayerActivity {
+
+	public final UnityService service = new UnityService();
+	public final VKListener listener = new VKListener();
+	public final String appId = "4985502";
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		VKSdk.initialize(listener, appId);
+
+		VKUIHelper.onCreate(this);
+
+		if (!VKSdk.wakeUpSession()) {
+			VKSdk.authorize(VKScope.FRIENDS);
+		}
+	}
+
+}

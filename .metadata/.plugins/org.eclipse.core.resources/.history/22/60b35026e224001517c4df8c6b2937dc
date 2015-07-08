@@ -1,0 +1,80 @@
+package com.rupini.unitywrapper;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.unity3d.player.UnityPlayerActivity;
+import com.vk.sdk.VKScope;
+import com.vk.sdk.VKSdk;
+import com.vk.sdk.VKUIHelper;
+import com.vk.sdk.api.VKApi;
+import com.vk.sdk.api.VKApiConst;
+import com.vk.sdk.api.VKParameters;
+import com.vk.sdk.api.VKRequest;
+import com.vk.sdk.api.VKResponse;
+import com.vk.sdk.api.model.VKApiUserFull;
+import com.vk.sdk.api.model.VKUsersArray;
+
+import android.os.Bundle;
+
+public class MainActivity extends UnityPlayerActivity {
+
+	private final VKRequest.VKRequestListener requestListener = new VKRequest.VKRequestListener() {
+		@Override
+		public void onComplete(VKResponse response) {
+			super.onComplete(response);
+			onFriendListReceived(response);
+		}
+	};
+
+	public final UnityService service = new UnityService();
+	private final VKListener listener = new VKListener();
+	private final String appId = "4985502";
+	private VKRequest currentRequest = null;
+	private final List<User> users = new ArrayList<User>();
+	private boolean requestComplited;
+
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+
+		VKSdk.initialize(listener, appId);
+
+		VKUIHelper.onCreate(this);
+
+		if (!VKSdk.wakeUpSession()) {
+			VKSdk.authorize(VKScope.FRIENDS, VKScope.WALL);
+		}
+	}
+
+	private void onFriendListReceived(VKResponse response) {
+		VKUsersArray usersArray = (VKUsersArray) response.parsedModel;
+
+		users.clear();
+		for (VKApiUserFull userFull : usersArray) {
+			User user = new User();
+			user.id = userFull.getId();
+			user.fullName = userFull.first_name + " " + userFull.last_name;
+			user.profilePhotoUrl = "";
+			users.add(user);
+		}
+		requestComplited = true;
+	}
+
+	public void requesFriendList() {
+
+		if (!requestComplited) return;
+			
+		requestComplited = false;
+		currentRequest = VKApi.friends().get(VKParameters.from(VKApiConst.FIELDS, "id,first_name,last_name"));
+		currentRequest.executeWithListener(requestListener);
+	}
+
+	public User getUserByIndex(int location) {
+		if (requestComplited && users.size() > location)
+			return users.get(location);
+		else
+			return null;
+	}
+
+}

@@ -1,0 +1,7 @@
+package com.rupini.unitywrapper;
+
+import android.app.Service;
+
+public class UnityService extends Service {
+
+}

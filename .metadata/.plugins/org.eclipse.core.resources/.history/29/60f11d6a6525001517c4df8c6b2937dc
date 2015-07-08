@@ -1,0 +1,48 @@
+package com.rupini.unitywrapper;
+
+import com.vk.sdk.VKAccessToken;
+import com.vk.sdk.VKSdkListener;
+import com.vk.sdk.api.VKError;
+
+public class VKListener extends VKSdkListener {
+
+	private VKAccessToken currentToken = null;
+
+	@Override
+	public void onAcceptUserToken(VKAccessToken token) {
+		currentToken = token;
+	}
+
+	@Override
+	public void onReceiveNewToken(VKAccessToken token) {
+		currentToken = token;
+	}
+
+	@Override
+	public void onRenewAccessToken(VKAccessToken token) {
+		currentToken = token;
+	}
+
+	@Override
+	public void onCaptchaError(VKError captchaError) {
+
+	}
+
+	@Override
+	public void onTokenExpired(VKAccessToken expiredToken) {
+
+	}
+
+	@Override
+	public void onAccessDenied(VKError authorizationError) {
+
+	}
+
+	public String getCurrentToken() {
+		if (currentToken != null)
+			return currentToken.toString();
+		else
+			return "null";
+	}
+
+}
